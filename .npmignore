@@ -1,0 +1,47 @@
+src/
+test/
+
+#.scannerwork Folders
+.scannerwork
+**/.scannerwork
+**/**/.scannerwork
+**/**/**/.scannerwork
+
+#.ENV
+.env
+**/.env
+**/**/.env
+**/**/**/.env
+
+.DS_Store
+test-report.xml
+coverage
+
+#Node Modules
+**/node_modules
+**/**/node_modules
+**/**/**/node_modules
+
+**/package-lock.json
+**/**/package-lock.json
+**/**/**/package-lock.json
+
+**/pnpm-lock.yaml
+**/**/pnpm-lock.yaml
+**/**/**/pnpm-lock.yaml
+
+**/yarn.lock
+**/**/yarn.lock
+**/**/**/yarn.lock
+
+#Inteliji IDEA
+.idea
+**/.idea
+**/**/.idea
+**/**/**/.idea
+
+#VS Code
+.vscode
+**/.vscode
+**/**/.vscode
+**/**/**/.vscode

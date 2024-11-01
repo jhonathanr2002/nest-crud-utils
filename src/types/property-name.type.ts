@@ -1,0 +1,1 @@
+export type PropertyName<T> = keyof T;
