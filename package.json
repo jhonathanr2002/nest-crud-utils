@@ -1,19 +1,23 @@
 {
     "name": "nest-crud-utils",
-    "version": "3.1.2",
+    "version": "1.0.0",
+    "description": "",
     "main": "dist/index.js",
+    "types": "./dist/index.d.ts",
+    "repository": "https://github.com/jhonathanr2002/nest-crud-utils",
     "scripts": {
         "build": "npx tsc",
-        "publish:github": "npm run build && npm publish",
-        "update": "npm update",
+        "publish:npm": "npm run build && npm publish",
+        "update": "pnpm update",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "publishConfig": {
-        "registry": "https://npm.pkg.github.com"
-    },
+    "keywords": [
+        "Nest JS",
+        "validator",
+        "Swagger"
+    ],
+    "author": "jhonathanr2002",
+    "license": "MIT",
     "dependencies": {
         "@nestjs/common": "^10.4.6",
         "async": "^3.2.6",
@@ -26,8 +30,5 @@
     "devDependencies": {
         "@types/async": "^3.2.24",
         "@types/node": "^22.8.6"
-    },
-    "types": "./dist/index.d.ts",
-    "repository": "",
-    "description": ""
+    }
 }
