@@ -6,7 +6,7 @@ export * from './entities/audit-user-string.entity';
 
 export * from './enums/field-errors.enum';
 
-export * from './exceptions/user.exception';
+export * from './filters/exceptions.filter';
 
 export * from './interfaces/excel-column.interface';
 export * from './interfaces/excel-download.interface';
