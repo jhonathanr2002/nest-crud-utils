@@ -8,7 +8,7 @@ import { BasicMethods } from './basic-methods.service';
 import async from "async";
 import { IExcelColumn } from '../interfaces/excel-column.interface';
 import { IExcelDownload } from '../interfaces/excel-download.interface';
-import { UserException } from '../exceptions/user.exception';
+import { UserException } from 'nest-clean-response';
 
 export abstract class TypeormService<T extends AuditTimestamp> extends BasicMethods {
     protected abstract getRepository(): Promise<Repository<T>>;

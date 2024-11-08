@@ -1,6 +1,6 @@
 {
     "name": "nest-crud-utils",
-    "version": "1.0.1",
+    "version": "1.0.6",
     "description": "",
     "main": "dist/index.js",
     "types": "./dist/index.d.ts",
@@ -19,7 +19,7 @@
     "author": "jhonathanr2002",
     "license": "MIT",
     "dependencies": {
-        "@nestjs/common": "^10.4.6",
+        "@nestjs/common": "^10.4.7",
         "async": "^3.2.6",
         "exceljs": "^4.4.0",
         "express": "^4.21.1",
@@ -32,6 +32,6 @@
     "devDependencies": {
         "@types/async": "^3.2.24",
         "@types/express": "^5.0.0",
-        "@types/node": "^22.8.6"
+        "@types/node": "^22.9.0"
     }
 }

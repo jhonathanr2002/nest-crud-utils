@@ -1,7 +1,6 @@
 import { ArgumentsHost, BadRequestException, Catch, ExceptionFilter, HttpStatus, Injectable, Scope } from "@nestjs/common";
 import { HttpArgumentsHost } from "@nestjs/common/interfaces";
-import { BackendErrorException } from "../../../nest-clean-response/src/classes/backend-error.exception";
-import { Duration, getHttpStatusDescription, ResponseDto, ResponseErrorDto, getHttpCodeByError, UserException } from "nest-clean-response";
+import { Duration, getHttpStatusDescription, ResponseDto, ResponseErrorDto, getHttpCodeByError, UserException, BackendErrorException } from "nest-clean-response";
 import { Response } from "express";
 
 @Catch()
@@ -14,7 +13,9 @@ export class ExceptionsFilter<T extends Error> implements ExceptionFilter {
         let oBackendError: BackendErrorException;
         const oErrorsResponse: Array<UserException> = [];
 
-        if ((exception instanceof UserException)) {
+        if (exception instanceof ResponseDto) {
+            oRes.status(exception.code).json(exception);
+        } else if ((exception instanceof UserException)) {
             oErrorsResponse.push(exception);
             oBackendError = new BackendErrorException(HttpStatus.BAD_REQUEST, exception);
             oBackendError.startTime = exception.startTime;

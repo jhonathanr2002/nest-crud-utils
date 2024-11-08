@@ -113,7 +113,6 @@
         /* Skip type checking all .d.ts files. */
     },
     "include": [
-        "src/**/*",
-        "../nest-clean-response/src/classes"
+        "src/**/*"
     ]
 }
