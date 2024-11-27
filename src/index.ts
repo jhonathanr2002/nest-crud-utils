@@ -40,5 +40,5 @@ export {
     extractTokenFromHeader,
     getCmdMicroservices,
     getMessageCodeByError,
-    getValueForCellExcel
+    getValueForCellExcel,
 };

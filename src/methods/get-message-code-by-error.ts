@@ -1,6 +1,6 @@
-import { NotFoundException, UnauthorizedException, BadRequestException, ForbiddenException } from "@nestjs/common";
-import { ThrottlerException } from "@nestjs/throttler";
-import { BackendErrorException, isResponseDto, ResponseDto, ResponseEnum, ResponseErrorDto, UserException } from "nest-clean-response";
+import { NotFoundException, UnauthorizedException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { ThrottlerException } from '@nestjs/throttler';
+import { BackendErrorException, isResponseDto, ResponseDto, ResponseEnum, ResponseErrorDto, UserException } from 'nest-clean-response';
 
 export default function getMessageCodeByError(oError: Error): ResponseEnum {
     if (isResponseDto(oError)) {
@@ -9,7 +9,7 @@ export default function getMessageCodeByError(oError: Error): ResponseEnum {
         return ResponseEnum.NOT_FOUND;
     } else if (oError instanceof ThrottlerException) {
         return ResponseEnum.TOO_MANY_REQUESTS;
-    } else if (oError instanceof UnauthorizedException || oError.message === "jwt expired") {
+    } else if (oError instanceof UnauthorizedException || oError.message === 'jwt expired') {
         return ResponseEnum.UNAUTHORIZED;
     } else if (oError instanceof BackendErrorException) {
         return ResponseEnum.INTERNAL_SERVER_ERROR;
@@ -17,10 +17,10 @@ export default function getMessageCodeByError(oError: Error): ResponseEnum {
         return ResponseEnum.BAD_REQUEST;
     } else if (oError instanceof ForbiddenException) {
         return ResponseEnum.FORBIDDEN;
-    } else if (oError && oError.message === "Timeout has occurred") {
+    } else if (oError && oError.message === 'Timeout has occurred') {
         return ResponseEnum.GATEWAY_TIMEOUT;
     } else {
-        console.error("ControllerError.getMessageCodeByError(oError)", oError);
+        console.error('ControllerError.getMessageCodeByError(oError)', oError);
 
         return ResponseEnum.UNKNOWN_ERROR;
     }

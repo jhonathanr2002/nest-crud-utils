@@ -1,12 +1,12 @@
-import { getMetadataArgsStorage } from "typeorm";
-import { PropertyName } from "../types/property-name.type";
+import { getMetadataArgsStorage } from 'typeorm';
+import { PropertyName } from '../types/property-name.type';
 
 export abstract class BasicMethods {
     protected async getOneToManyProperties(oEntity: Function): Promise<string[]> {
         const metadata = getMetadataArgsStorage();
 
         const oneToManyRelations = metadata.relations.filter(
-            relation => relation.target === oEntity && relation.relationType === "one-to-many"
+            relation => relation.target === oEntity && relation.relationType === 'one-to-many',
         );
 
         return oneToManyRelations.map(relation => relation.propertyName);
@@ -16,7 +16,7 @@ export abstract class BasicMethods {
         const metadata = getMetadataArgsStorage();
 
         const oColumn = metadata.joinColumns.find(
-            (column) => column.target === oEntity && column.propertyName === sPropertyName
+            (column) => column.target === oEntity && column.propertyName === sPropertyName,
         );
 
         if (!oColumn) {
@@ -30,7 +30,7 @@ export abstract class BasicMethods {
         const metadata = getMetadataArgsStorage();
 
         const oColumn = metadata.columns.find(
-            (column) => column.target === oEntity && column.propertyName === sPropertyName
+            (column) => column.target === oEntity && column.propertyName === sPropertyName,
         );
 
         if (!oColumn) {

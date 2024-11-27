@@ -1,6 +1,15 @@
-import { Catch, ExceptionFilter, ArgumentsHost, HttpStatus, BadRequestException } from "@nestjs/common";
-import { BackendErrorException, isResponseDto, getHttpCodeByError, ResponseDto, getHttpStatusDescription, Duration, ResponseErrorDto, UserException } from "nest-clean-response";
-import { throwError } from "rxjs";
+import { Catch, ExceptionFilter, ArgumentsHost, HttpStatus, BadRequestException } from '@nestjs/common';
+import {
+    BackendErrorException,
+    isResponseDto,
+    getHttpCodeByError,
+    ResponseDto,
+    getHttpStatusDescription,
+    Duration,
+    ResponseErrorDto,
+    UserException,
+} from 'nest-clean-response';
+import { throwError } from 'rxjs';
 
 @Catch()
 export class ExceptionRcpFilter<T extends Error> implements ExceptionFilter {
@@ -43,7 +52,7 @@ export class ExceptionRcpFilter<T extends Error> implements ExceptionFilter {
             Duration.getDuration(oBackendError.startTime ?? null).toObject(),
             oErrorsResponse.map((oItem: UserException) => {
                 return new ResponseErrorDto(oItem.property, oItem.messageCode, oItem.args);
-            })
+            }),
         ));
     }
 }

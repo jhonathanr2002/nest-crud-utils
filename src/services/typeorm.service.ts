@@ -1,18 +1,20 @@
 import * as ExcelJS from 'exceljs';
 import { v4 as uuidv4 } from 'uuid';
-import { FindManyOptions, FindOneOptions, FindOperator, FindOptionsSelect, FindOptionsWhere, In, ObjectType, Repository } from "typeorm";
-import { AuditTimestamp } from "../entities/audit-timestamp.entity";
-import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
-import { PropertyName } from "../types/property-name.type";
+import { FindManyOptions, FindOneOptions, FindOperator, FindOptionsSelect, FindOptionsWhere, In, ObjectType, Repository } from 'typeorm';
+import { AuditTimestamp } from '../entities/audit-timestamp.entity';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
+import { PropertyName } from '../types/property-name.type';
 import { BasicMethods } from './basic-methods.service';
-import async from "async";
+import async from 'async';
 import { IExcelColumn } from '../interfaces/excel-column.interface';
 import { IExcelDownload } from '../interfaces/excel-download.interface';
 import { UserException } from 'nest-clean-response';
 
 export abstract class TypeormService<T extends AuditTimestamp> extends BasicMethods {
     protected abstract getRepository(): Promise<Repository<T>>;
+
     protected abstract useSoftDelete(): Promise<boolean>;
+
     protected abstract entity(): ObjectType<T>;
 
     private entityName(): string {
@@ -46,8 +48,8 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
     public async findById(sId: string): Promise<T | null> {
         return await this.findOne({
             where: {
-                id: sId
-            } as FindOptionsWhere<T>
+                id: sId,
+            } as FindOptionsWhere<T>,
         });
     }
 
@@ -60,9 +62,9 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
     public async existById(sId: string, _withDeleted?: boolean): Promise<boolean> {
         return await this.existBy({
             where: {
-                id: In(sId as unknown as FindOperator<string>)
+                id: In(sId as unknown as FindOperator<string>),
             } as FindOptionsWhere<T>,
-            withDeleted: _withDeleted ?? false
+            withDeleted: _withDeleted ?? false,
         });
     }
 
@@ -70,7 +72,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
         const bResult = await this.existBy(oFilters);
 
         if (bResult === false) {
-            throw this.throwException("values", "NotFound", Object.values(oFilters))
+            throw this.throwException('values', 'NotFound', Object.values(oFilters));
         }
 
         return bResult;
@@ -79,9 +81,9 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
     public async existByIdOrFail(sId: string, _withDeleted?: boolean): Promise<boolean> {
         return await this.existByOrFail({
             where: {
-                id: sId
+                id: sId,
             } as FindOptionsWhere<T>,
-            withDeleted: _withDeleted ?? false
+            withDeleted: _withDeleted ?? false,
         });
     }
 
@@ -105,7 +107,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
         await oRepository.createQueryBuilder()
             .update()
             .set(oValue)
-            .where("id = :sId", { sId })
+            .where('id = :sId', { sId })
             .execute();
 
         return await this.findById(sId);
@@ -123,7 +125,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
             const nElements = (await oEntity[key]).length;
 
             if (nElements > 0) {
-                throw this.throwException("id", key + "InUse", [nElements]);
+                throw this.throwException('id', key + 'InUse', [nElements]);
             }
         }
 
@@ -165,7 +167,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
 
         const oOverwrite = [...([...overwrite] as PropertyName<T>[]).map((sItem) => {
             return this.getColumnByPropertyName(this.entity(), sItem);
-        }), 'updated_at', 'updated_by_id', 'updated_by_username', sIndentifierColumnName].filter((oItem) => typeof oItem === "string");
+        }), 'updated_at', 'updated_by_id', 'updated_by_username', sIndentifierColumnName].filter((oItem) => typeof oItem === 'string');
 
         await async.forEachLimit(this.chunkList(oValue, 500), 10, async (oItem: Array<T>, callback) => {
             await oRepository.createQueryBuilder()
@@ -173,7 +175,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
                 .into(this.entity())
                 .values(oItem as QueryDeepPartialEntity<T>[])
                 .orUpdate(oOverwrite, [sIndentifierColumnName], {
-                    upsertType: "on-conflict-do-update"
+                    upsertType: 'on-conflict-do-update',
                 }).execute();
 
             callback(null);
@@ -183,15 +185,15 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
     private async updateAll(oRepository: Repository<T>, _oValue: Array<T>, sIndentifierColumn: PropertyName<T>, overwrite: PropertyName<T>[]) {
         const dbType = oRepository.manager.connection.options.type;
 
-        if (dbType === "mysql" || dbType === "mariadb") {
+        if (dbType === 'mysql' || dbType === 'mariadb') {
             await async.forEachLimit(this.chunkList(_oValue, 1), 4, async (oItem: Array<T>, callback) => {
                 await oRepository.save(oItem, {
-                    chunk: 500
+                    chunk: 500,
                 });
 
                 callback(null);
             });
-        } else if (dbType === "postgres") {
+        } else if (dbType === 'postgres') {
             await this.insertAll(oRepository, _oValue, sIndentifierColumn, overwrite);
         }
     }
@@ -201,7 +203,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
 
         const oFilters = {};
         const oSelect = {
-            id: true
+            id: true,
         };
 
         oFilters[sIndentifierColumn.toString()] = In(_oValue.map((oItem) => fIndentifierColumnCallback(oItem)));
@@ -209,7 +211,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
 
         const ids = await oRepository.find({
             where: oFilters,
-            select: oSelect as FindOptionsSelect<T>
+            select: oSelect as FindOptionsSelect<T>,
         });
 
         const oItemsInsert: Array<T> = [];
@@ -223,7 +225,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
                 const oSubItem = ids[j];
 
                 if (oSubItem[sIndentifierColumn.toString()] == fIndentifierColumnCallback(oItem)) {
-                    oItem["id"] = oSubItem["id"];
+                    oItem['id'] = oSubItem['id'];
                     bFind = true;
 
                     break;
@@ -247,7 +249,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
 
         if (bSelectValues !== false) {
             return await this.findMany({
-                where: oFilters
+                where: oFilters,
             });
         } else {
             return [];
@@ -255,11 +257,11 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
     }
 
     protected getExcelTemplateName(): string | null {
-        throw this.throwException('file', "serviceNoAvailable", ["getExcelTemplateName"]);
+        throw this.throwException('file', 'serviceNoAvailable', ['getExcelTemplateName']);
     }
 
     protected async getExcelTemplateColumns(): Promise<Array<IExcelColumn> | null> {
-        throw this.throwException('file', "serviceNoAvailable", ["getExcelTemplateColumns"]);
+        throw this.throwException('file', 'serviceNoAvailable', ['getExcelTemplateColumns']);
     }
 
     public async buildTemplateExcelForDownload(): Promise<IExcelDownload> {
@@ -270,15 +272,15 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
 
         oWorksheet.columns = oColumns.map((oItem) => {
             return {
-                header: oItem.name + (oItem.required ? " (*)" : ""),
+                header: oItem.name + (oItem.required ? ' (*)' : ''),
                 key: oItem.key,
                 width: oItem.options.width || 10,
                 style: {
                     protection: {
-                        locked: true
-                    }
-                }
-            }
+                        locked: true,
+                    },
+                },
+            };
         });
 
         const _oValue = {};
@@ -293,35 +295,35 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
 
         oColumns.forEach((oItem, i) => {
             oWorksheet.columns[i].eachCell((cell, rowNumber) => {
-                if (oItem.type === "Double") {
+                if (oItem.type === 'Double') {
                     cell.dataValidation = {
-                        type: "decimal",
-                        operator: "between",
-                        formulae: []
+                        type: 'decimal',
+                        operator: 'between',
+                        formulae: [],
                     };
-                    cell.dataValidation.type = "decimal";
-                    cell.dataValidation.operator = "between";
+                    cell.dataValidation.type = 'decimal';
+                    cell.dataValidation.operator = 'between';
                 }
 
-                if (oItem.type === "Date") {
+                if (oItem.type === 'Date') {
                     cell.dataValidation = {
-                        type: "date",
-                        formulae: []
+                        type: 'date',
+                        formulae: [],
                     };
                 }
 
-                if (oItem.type === "String") {
+                if (oItem.type === 'String') {
                     cell.dataValidation = {
-                        type: "textLength",
-                        formulae: []
+                        type: 'textLength',
+                        formulae: [],
                     };
                 }
 
                 if (cell.dataValidation) {
                     cell.dataValidation.allowBlank = !oItem.required;
 
-                    cell.dataValidation.errorTitle = "Valor Inválido";
-                    cell.dataValidation.error = "Valor Inválido";
+                    cell.dataValidation.errorTitle = 'Valor Inválido';
+                    cell.dataValidation.error = 'Valor Inválido';
                     cell.dataValidation.showErrorMessage = true;
                 }
             });
@@ -331,7 +333,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
             cell.fill = {
                 type: 'pattern',
                 pattern: 'solid',
-                fgColor: { argb: 'B7C5E4' }
+                fgColor: { argb: 'B7C5E4' },
             };
 
             cell.font = {
@@ -344,7 +346,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
                 top: { style: 'thin' },
                 left: { style: 'thin' },
                 bottom: { style: 'thin' },
-                right: { style: 'thin' }
+                right: { style: 'thin' },
             };
         });
 
@@ -365,6 +367,6 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
     }
 
     public async uploadTemplateExcel(oBufferFile: Buffer): Promise<boolean> {
-        throw this.throwException('file', "serviceNoAvailable", ["uploadTemplateExcel"]);
+        throw this.throwException('file', 'serviceNoAvailable', ['uploadTemplateExcel']);
     }
 }

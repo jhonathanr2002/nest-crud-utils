@@ -1,8 +1,8 @@
-import { Catch, Injectable, Scope, ExceptionFilter, ArgumentsHost } from "@nestjs/common";
-import { HttpArgumentsHost } from "@nestjs/common/interfaces";
-import { isResponseDto, ResponseDto } from "nest-clean-response";
-import { ExceptionsFilter } from "./exceptions.filter";
-import { Response } from "express";
+import { Catch, Injectable, Scope, ExceptionFilter, ArgumentsHost } from '@nestjs/common';
+import { HttpArgumentsHost } from '@nestjs/common/interfaces';
+import { isResponseDto, ResponseDto } from 'nest-clean-response';
+import { ExceptionsFilter } from './exceptions.filter';
+import { Response } from 'express';
 
 @Catch()
 @Injectable({ scope: Scope.REQUEST })
@@ -23,8 +23,8 @@ export class ExceptionResponseDtoFilter<T extends Error> extends ExceptionsFilte
                     oErrorProcess.messageCode,
                     oErrorProcess.result,
                     oErrorProcess.duration,
-                    oErrorProcess.resultError
-                )
+                    oErrorProcess.resultError,
+                ),
             );
         } else {
             super.catch(oException, host);

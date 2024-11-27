@@ -7,10 +7,10 @@ export default function extractTokenFromHeader(oReq: Request) {
         return null;
     }
 
-    if (sToken.startsWith("Bearer")) {
+    if (sToken.startsWith('Bearer')) {
         const [type, token] = sToken.split(' ') ?? [];
 
-        return type === 'Bearer' ? (token === "undefined" ? null : token) : null;
+        return type === 'Bearer' ? (token === 'undefined' ? null : token) : null;
     } else {
         return null;
     }

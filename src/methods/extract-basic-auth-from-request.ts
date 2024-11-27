@@ -1,13 +1,13 @@
 import { Request } from 'express';
 
 export default function extractBasicAuthFromRequest(oReq: Request) {
-    const sBasicAuth: string = (oReq.headers['authorization'] ?? "").trim();
+    const sBasicAuth: string = (oReq.headers['authorization'] ?? '').trim();
 
     if (sBasicAuth.length === 0) {
         return null;
     }
 
-    if (sBasicAuth.startsWith("Basic")) {
+    if (sBasicAuth.startsWith('Basic')) {
         const [type, base64Credentials] = sBasicAuth.split(' ') ?? [];
 
         const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
@@ -15,7 +15,7 @@ export default function extractBasicAuthFromRequest(oReq: Request) {
 
         return type === 'Basic' ? {
             username,
-            password
+            password,
         } : null;
     } else {
         return null;

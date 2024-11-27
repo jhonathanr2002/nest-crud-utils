@@ -1,6 +1,6 @@
-import { ValidateNested } from "class-validator";
+import { ValidateNested } from 'class-validator';
 
 export class RequestMicroservicePublicId {
-	@ValidateNested()
-	ids: Record<string, string>
+    @ValidateNested()
+    ids: Record<string, string>;
 }
