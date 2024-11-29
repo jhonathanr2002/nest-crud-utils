@@ -29,7 +29,11 @@ export abstract class TypeormUserStringService<T extends AuditUserString> extend
             await this.prepareSave(oItem);
         }
 
-        return await super.saveAll(_oValue, sIndentifierColumn, overwrite, fIndentifierColumnCallback, bSelectValues);
+        return await super.saveAll(_oValue, sIndentifierColumn, [
+            ...overwrite,
+            'updatedById',
+            'updatedByUsername'
+        ], fIndentifierColumnCallback, bSelectValues);
     }
 
     protected async prepareUpdate(oValue: QueryDeepPartialEntity<T>) {

@@ -167,7 +167,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
 
         const oOverwrite = [...([...overwrite] as PropertyName<T>[]).map((sItem) => {
             return this.getColumnByPropertyName(this.entity(), sItem);
-        }), 'updated_at', 'updated_by_id', 'updated_by_username', sIndentifierColumnName].filter((oItem) => typeof oItem === 'string');
+        }), 'updated_at', sIndentifierColumnName].filter((oItem) => typeof oItem === 'string');
 
         await async.forEachLimit(this.chunkList(oValue, 500), 10, async (oItem: Array<T>, callback) => {
             await oRepository.createQueryBuilder()
