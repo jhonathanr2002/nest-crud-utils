@@ -1,7 +1,6 @@
 import extractBasicAuthFromRequest from './methods/extract-basic-auth-from-request';
 import extractTokenFromHeader from './methods/extract-token-from-request';
 import getCmdMicroservices from './methods/get-cmd-microservices';
-import getMessageCodeByError from './methods/get-message-code-by-error';
 import getValueForCellExcel from './methods/get-value-for-cell-excel';
 
 export * from './decorators/current-jwt.decorator';
@@ -39,6 +38,5 @@ export {
     extractBasicAuthFromRequest,
     extractTokenFromHeader,
     getCmdMicroservices,
-    getMessageCodeByError,
     getValueForCellExcel,
 };
