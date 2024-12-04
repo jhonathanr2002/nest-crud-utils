@@ -1,5 +1,5 @@
-import { ArgumentsHost, BadRequestException, Catch, ExceptionFilter, HttpStatus, Injectable, Scope } from '@nestjs/common';
-import { HttpArgumentsHost } from '@nestjs/common/interfaces';
+import {ArgumentsHost, BadRequestException, Catch, ExceptionFilter, HttpStatus, Injectable, Scope} from '@nestjs/common';
+import {HttpArgumentsHost} from '@nestjs/common/interfaces';
 import {
     Duration,
     getHttpStatusDescription,
@@ -9,10 +9,10 @@ import {
     UserException,
     BackendErrorException,
 } from 'nest-clean-response';
-import { Response } from 'express';
+import {Response} from 'express';
 
 @Catch()
-@Injectable({ scope: Scope.REQUEST })
+@Injectable({scope: Scope.REQUEST})
 export class ExceptionsFilter<T extends Error> implements ExceptionFilter {
     catch(exception: T, host: ArgumentsHost) {
         const ctx: HttpArgumentsHost = host.switchToHttp();

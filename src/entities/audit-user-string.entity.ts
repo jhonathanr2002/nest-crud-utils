@@ -1,5 +1,5 @@
-import { Column } from 'typeorm';
-import { AuditTimestamp } from './audit-timestamp.entity';
+import {Column} from 'typeorm';
+import {AuditTimestamp} from './audit-timestamp.entity';
 
 export class AuditUserString extends AuditTimestamp {
     @Column({

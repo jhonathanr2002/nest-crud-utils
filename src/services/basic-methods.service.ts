@@ -1,5 +1,5 @@
-import { getMetadataArgsStorage } from 'typeorm';
-import { PropertyName } from '../types/property-name.type';
+import {getMetadataArgsStorage} from 'typeorm';
+import {PropertyName} from '../types/property-name.type';
 
 export abstract class BasicMethods {
     protected async getOneToManyProperties(oEntity: Function): Promise<string[]> {

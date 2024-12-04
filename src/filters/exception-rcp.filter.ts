@@ -1,4 +1,4 @@
-import { Catch, ExceptionFilter, ArgumentsHost, HttpStatus, BadRequestException } from '@nestjs/common';
+import {Catch, ExceptionFilter, ArgumentsHost, HttpStatus, BadRequestException} from '@nestjs/common';
 import {
     BackendErrorException,
     isResponseDto,
@@ -9,7 +9,7 @@ import {
     ResponseErrorDto,
     UserException,
 } from 'nest-clean-response';
-import { throwError } from 'rxjs';
+import {throwError} from 'rxjs';
 
 @Catch()
 export class ExceptionRcpFilter<T extends Error> implements ExceptionFilter {

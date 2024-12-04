@@ -1,4 +1,4 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import {createParamDecorator, ExecutionContext} from '@nestjs/common';
 
 export function CurrentUser<T>() {
     type TFieldUser = keyof T;

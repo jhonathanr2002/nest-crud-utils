@@ -1,4 +1,4 @@
-import { RequestMicroserviceUser } from './request-microservice-user.dto';
+import {RequestMicroserviceUser} from './request-microservice-user.dto';
 
 export class RequestMicroserviceDto<T> extends RequestMicroserviceUser {
     dto: T;

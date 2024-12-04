@@ -1,4 +1,4 @@
-import { Transport } from '@nestjs/microservices';
+import {Transport} from '@nestjs/microservices';
 
 export default function getCmdMicroservices(sName: string, sEnv: 'local' | 'dev' | 'qas' | 'prd' | string, sTransport: Transport): string {
     if (sTransport === Transport.TCP) {

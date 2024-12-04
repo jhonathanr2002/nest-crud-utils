@@ -1,8 +1,8 @@
-import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
-import { AuditUserString } from '../entities/audit-user-string.entity';
-import { TypeormService } from './typeorm.service';
-import { PropertyName } from '../types/property-name.type';
-import { UserDto } from '../dto/user.dto';
+import {QueryDeepPartialEntity} from 'typeorm/query-builder/QueryPartialEntity';
+import {AuditUserString} from '../entities/audit-user-string.entity';
+import {TypeormService} from './typeorm.service';
+import {PropertyName} from '../types/property-name.type';
+import {UserDto} from '../dto/user.dto';
 
 export abstract class TypeormUserStringService<T extends AuditUserString> extends TypeormService<T> {
     protected abstract getCurrentUser(): Promise<UserDto>;

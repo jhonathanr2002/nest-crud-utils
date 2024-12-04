@@ -1,14 +1,14 @@
 import * as ExcelJS from 'exceljs';
-import { v4 as uuidv4 } from 'uuid';
-import { FindManyOptions, FindOneOptions, FindOperator, FindOptionsSelect, FindOptionsWhere, In, ObjectType, Repository } from 'typeorm';
-import { AuditTimestamp } from '../entities/audit-timestamp.entity';
-import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
-import { PropertyName } from '../types/property-name.type';
-import { BasicMethods } from './basic-methods.service';
+import {v4 as uuidv4} from 'uuid';
+import {FindManyOptions, FindOneOptions, FindOperator, FindOptionsSelect, FindOptionsWhere, In, ObjectType, Repository} from 'typeorm';
+import {AuditTimestamp} from '../entities/audit-timestamp.entity';
+import {QueryDeepPartialEntity} from 'typeorm/query-builder/QueryPartialEntity';
+import {PropertyName} from '../types/property-name.type';
+import {BasicMethods} from './basic-methods.service';
 import async from 'async';
-import { IExcelColumn } from '../interfaces/excel-column.interface';
-import { IDownload } from '../interfaces/download.interface';
-import { UserException } from 'nest-clean-response';
+import {IExcelColumn} from '../interfaces/excel-column.interface';
+import {IDownload} from '../interfaces/download.interface';
+import {UserException} from 'nest-clean-response';
 
 export abstract class TypeormService<T extends AuditTimestamp> extends BasicMethods {
     protected abstract getRepository(): Promise<Repository<T>>;
@@ -90,7 +90,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
     protected async save(oValue: T): Promise<T> {
         const oRepository = await this.getRepository();
 
-        const { id } = await oRepository.save(oValue);
+        const {id} = await oRepository.save(oValue);
 
         return await this.findById(id);
     }
@@ -107,7 +107,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
         await oRepository.createQueryBuilder()
             .update()
             .set(oValue)
-            .where('id = :sId', { sId })
+            .where('id = :sId', {sId})
             .execute();
 
         return await this.findById(sId);
@@ -333,7 +333,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
             cell.fill = {
                 type: 'pattern',
                 pattern: 'solid',
-                fgColor: { argb: 'B7C5E4' },
+                fgColor: {argb: 'B7C5E4'},
             };
 
             cell.font = {
@@ -343,10 +343,10 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
             };
 
             cell.border = {
-                top: { style: 'thin' },
-                left: { style: 'thin' },
-                bottom: { style: 'thin' },
-                right: { style: 'thin' },
+                top: {style: 'thin'},
+                left: {style: 'thin'},
+                bottom: {style: 'thin'},
+                right: {style: 'thin'},
             };
         });
 

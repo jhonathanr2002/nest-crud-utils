@@ -1,4 +1,4 @@
-import { Request } from 'express';
+import {Request} from 'express';
 
 export default function extractTokenFromHeader(oReq: Request) {
     const sToken: string = (oReq.headers['authorization'] || oReq.cookies.token || '').trim();

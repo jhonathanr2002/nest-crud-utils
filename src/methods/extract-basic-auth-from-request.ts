@@ -1,4 +1,4 @@
-import { Request } from 'express';
+import {Request} from 'express';
 
 export default function extractBasicAuthFromRequest(oReq: Request) {
     const sBasicAuth: string = (oReq.headers['authorization'] ?? '').trim();
