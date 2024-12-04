@@ -23,7 +23,7 @@ export * from './filters/exception-response-dto.filter';
 export * from './filters/exceptions.filter';
 
 export * from './interfaces/excel-column.interface';
-export * from './interfaces/excel-download.interface';
+export * from './interfaces/download.interface';
 
 export * from './services/basic-methods.service';
 export * from './services/typeorm-user-string.service';
@@ -31,8 +31,6 @@ export * from './services/typeorm.service';
 
 export * from './types/lazy.type';
 export * from './types/property-name.type';
-export * from './types/message-args.type';
-
 
 export {
     extractBasicAuthFromRequest,

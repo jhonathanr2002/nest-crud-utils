@@ -7,7 +7,7 @@ import { PropertyName } from '../types/property-name.type';
 import { BasicMethods } from './basic-methods.service';
 import async from 'async';
 import { IExcelColumn } from '../interfaces/excel-column.interface';
-import { IExcelDownload } from '../interfaces/excel-download.interface';
+import { IDownload } from '../interfaces/download.interface';
 import { UserException } from 'nest-clean-response';
 
 export abstract class TypeormService<T extends AuditTimestamp> extends BasicMethods {
@@ -264,7 +264,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
         throw this.throwException('file', 'serviceNoAvailable', ['getExcelTemplateColumns']);
     }
 
-    public async buildTemplateExcelForDownload(): Promise<IExcelDownload> {
+    public async buildTemplateExcelForDownload(): Promise<IDownload> {
         const oWorkbook: ExcelJS.Workbook = new ExcelJS.Workbook();
         const oWorksheet: ExcelJS.Worksheet = oWorkbook.addWorksheet(this.getExcelTemplateName());
 
@@ -351,7 +351,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
         });
 
         return {
-            content: await oWorkbook.xlsx.writeBuffer(),
+            content: Buffer.from(await oWorkbook.xlsx.writeBuffer()),
             name: `${this.getExcelTemplateName()}.xlsx`,
         };
     }
