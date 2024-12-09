@@ -12,7 +12,6 @@ import {
 import {Response} from 'express';
 
 @Catch()
-@Injectable({scope: Scope.REQUEST})
 export class ExceptionsFilter<T extends Error> implements ExceptionFilter {
     catch(exception: T, host: ArgumentsHost) {
         const ctx: HttpArgumentsHost = host.switchToHttp();
@@ -47,16 +46,32 @@ export class ExceptionsFilter<T extends Error> implements ExceptionFilter {
             oBackendError = new BackendErrorException(getHttpCodeByError(exception), exception);
         }
 
-        oRes.status(oBackendError.getStatus()).json(
-            new ResponseDto<null>(
-                oBackendError.getStatus(),
-                getHttpStatusDescription(oBackendError.getStatus()),
-                null,
-                Duration.getDuration(oBackendError.startTime ?? null).toObject(),
-                oErrorsResponse.map((oItem: UserException) => {
-                    return new ResponseErrorDto(oItem.property, oItem.messageCode, oItem.args);
-                }),
-            ),
-        );
+        if(oBackendError instanceof BackendErrorException){
+            oRes.status(oBackendError.getStatus()).json(
+                new ResponseDto<null>(
+                    oBackendError.getStatus(),
+                    getHttpStatusDescription(oBackendError.getStatus()),
+                    null,
+                    Duration.getDuration(oBackendError.startTime ?? null).toObject(),
+                    oErrorsResponse.map((oItem: UserException) => {
+                        return new ResponseErrorDto(oItem.property, oItem.messageCode, oItem.args);
+                    }),
+                ),
+            );
+        } else {
+            oRes.status(500).json(
+                new ResponseDto<null>(
+                    500,
+                    getHttpStatusDescription(500),
+                    null,
+                    Duration.getDuration(new Date().getTime()).toObject(),
+                    oErrorsResponse.map((oItem: UserException) => {
+                        return new ResponseErrorDto(oItem.property, oItem.messageCode, oItem.args);
+                    }),
+                ),
+            );
+        }
+
+
     }
 }

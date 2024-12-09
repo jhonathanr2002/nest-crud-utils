@@ -45,14 +45,26 @@ export class ExceptionRcpFilter<T extends Error> implements ExceptionFilter {
             oBackendError = new BackendErrorException(getHttpCodeByError(oException), oException);
         }
 
-        return throwError(() => new ResponseDto<null>(
-            oBackendError.getStatus(),
-            getHttpStatusDescription(oBackendError.getStatus()),
-            null,
-            Duration.getDuration(oBackendError.startTime ?? null).toObject(),
-            oErrorsResponse.map((oItem: UserException) => {
-                return new ResponseErrorDto(oItem.property, oItem.messageCode, oItem.args);
-            }),
-        ));
+        if(oBackendError instanceof BackendErrorException){
+            return throwError(() => new ResponseDto<null>(
+                oBackendError.getStatus(),
+                getHttpStatusDescription(oBackendError.getStatus()),
+                null,
+                Duration.getDuration(oBackendError.startTime ?? null).toObject(),
+                oErrorsResponse.map((oItem: UserException) => {
+                    return new ResponseErrorDto(oItem.property, oItem.messageCode, oItem.args);
+                }),
+            ));
+        } else {
+            return throwError(() => new ResponseDto<null>(
+                500,
+                getHttpStatusDescription(500),
+                null,
+                Duration.getDuration(new Date().getTime()).toObject(),
+                oErrorsResponse.map((oItem: UserException) => {
+                    return new ResponseErrorDto(oItem.property, oItem.messageCode, oItem.args);
+                }),
+            ));
+        }
     }
 }
