@@ -1,15 +1,23 @@
-import {IsStringValidator, IsUuidValidator} from 'nest-swagger-validator';
+import { IsValidator } from 'nest-swagger-validator';
 
 export class UserDto {
-    @IsUuidValidator('all', {
-        swaggerDocs: false,
+    @IsValidator({
+        swaggerDocs: true,
+        ruleType: 'string',
+        stringOptions: {
+            minLength: 0,
+            maxLength: 255,
+        },
     })
     id: string;
 
-    @IsStringValidator({
-        swaggerDocs: false,
-        minLength: 0,
-        maxLength: 255,
+    @IsValidator({
+        swaggerDocs: true,
+        ruleType: 'string',
+        stringOptions: {
+            minLength: 0,
+            maxLength: 255,
+        },
     })
     username: string;
 }
