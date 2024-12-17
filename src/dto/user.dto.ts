@@ -1,4 +1,4 @@
-import { IsValidator } from 'nest-swagger-validator';
+import {IsValidator} from 'nest-swagger-validator';
 
 export class UserDto {
     @IsValidator({

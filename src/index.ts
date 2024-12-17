@@ -25,8 +25,14 @@ export * from './filters/exceptions.filter';
 export * from './interfaces/excel-column.interface';
 export * from './interfaces/download.interface';
 
+export * from './services/interfaces/on-after-delete.interface';
+export * from './services/interfaces/on-after-save.interface';
+export * from './services/interfaces/on-after-update.interface';
+export * from './services/interfaces/on-before-delete.interface';
+export * from './services/interfaces/on-before-save.interface';
+export * from './services/interfaces/on-before-update.interface';
+
 export * from './services/basic-methods.service';
-export * from './services/typeorm-user-string.service';
 export * from './services/typeorm.service';
 
 export * from './types/lazy.type';

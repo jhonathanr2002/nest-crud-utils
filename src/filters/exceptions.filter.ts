@@ -1,13 +1,13 @@
-import {ArgumentsHost, BadRequestException, Catch, ExceptionFilter, HttpStatus, Injectable, Scope} from '@nestjs/common';
+import {ArgumentsHost, BadRequestException, Catch, ExceptionFilter, HttpStatus} from '@nestjs/common';
 import {HttpArgumentsHost} from '@nestjs/common/interfaces';
 import {
+    BackendErrorException,
     Duration,
+    getHttpCodeByError,
     getHttpStatusDescription,
     ResponseDto,
     ResponseErrorDto,
-    getHttpCodeByError,
     UserException,
-    BackendErrorException,
 } from 'nest-clean-response';
 import {Response} from 'express';
 
@@ -31,10 +31,10 @@ export class ExceptionsFilter<T extends Error> implements ExceptionFilter {
 
             if (oBackendError.error) {
                 if (exception.error instanceof BadRequestException) {
-                    const oErros = exception.error.getResponse() as { message: Array<string> };
+                    const oErrors = exception.error.getResponse() as { message: Array<string> };
 
-                    if (oErros.message && Array.isArray(oErros.message)) {
-                        oErros.message.map((sValue: string) => {
+                    if (oErrors.message && Array.isArray(oErrors.message)) {
+                        oErrors.message.map((sValue: string) => {
                             return JSON.parse(sValue);
                         }).forEach((oItem: UserException) => {
                             oErrorsResponse.push(new UserException(oItem.property, oItem.messageCode, oItem.args));
@@ -46,7 +46,7 @@ export class ExceptionsFilter<T extends Error> implements ExceptionFilter {
             oBackendError = new BackendErrorException(getHttpCodeByError(exception), exception);
         }
 
-        if(oBackendError instanceof BackendErrorException){
+        if (oBackendError instanceof BackendErrorException) {
             oRes.status(oBackendError.getStatus()).json(
                 new ResponseDto<null>(
                     oBackendError.getStatus(),

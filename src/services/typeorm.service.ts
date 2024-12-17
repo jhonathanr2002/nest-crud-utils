@@ -1,42 +1,26 @@
-import * as ExcelJS from 'exceljs';
-import {v4 as uuidv4} from 'uuid';
-import {FindManyOptions, FindOneOptions, FindOperator, FindOptionsSelect, FindOptionsWhere, In, ObjectType, Repository} from 'typeorm';
-import {AuditTimestamp} from '../entities/audit-timestamp.entity';
-import {QueryDeepPartialEntity} from 'typeorm/query-builder/QueryPartialEntity';
-import {PropertyName} from '../types/property-name.type';
-import {BasicMethods} from './basic-methods.service';
-import async from 'async';
-import {IExcelColumn} from '../interfaces/excel-column.interface';
-import {IDownload} from '../interfaces/download.interface';
-import {UserException} from 'nest-clean-response';
+import {AuditTimestamp} from "../entities/audit-timestamp.entity";
+import {UserException} from "nest-clean-response";
+import {DeepPartial, FindManyOptions, FindOneOptions, FindOptionsSelect, FindOptionsWhere, In, ObjectType, Repository} from "typeorm";
+import {UserDto} from "../dto/user.dto";
+import {QueryDeepPartialEntity} from "typeorm/query-builder/QueryPartialEntity";
+import {AuditUserString} from "../entities/audit-user-string.entity";
+import {BasicMethods} from "./basic-methods.service";
+import {PropertyName} from "../types/property-name.type";
+import {v4 as uuidv4} from "uuid";
+import async from "async";
+import {IDownload} from "../interfaces/download.interface";
+import * as ExcelJS from "exceljs";
+import {IExcelColumn} from "../interfaces/excel-column.interface";
 
-export abstract class TypeormService<T extends AuditTimestamp> extends BasicMethods {
-    protected abstract getRepository(): Promise<Repository<T>>;
-
-    protected abstract useSoftDelete(): Promise<boolean>;
-
-    protected abstract entity(): ObjectType<T>;
-
-    private entityName(): string {
-        const eValue = this.entity();
-
-        return eValue.name;
-    }
-
+export abstract class TypeormUserStringService<T extends AuditTimestamp, CD, UD> extends BasicMethods {
     public throwException(sProperty: string, sMessage: string, oValues: string[]): UserException {
-        return new UserException(sProperty, `${this.getFormatEntityName()}${sMessage}`, oValues);
-    }
-
-    protected getFormatEntityName(): string {
-        const sValue: string = this.entityName();
-
-        return sValue.at(0).toLowerCase() + sValue.substring(1);
+        return new UserException(sProperty, `${this.convertToPascalCase(this.entityName())}${this.convertToPascalCase(sMessage)}`, oValues);
     }
 
     public async findOne(oOptions?: FindOneOptions<T>): Promise<T | null> {
         const oRepository = await this.getRepository();
 
-        return (await oRepository.findOne(oOptions ?? {})) ?? null;
+        return await oRepository.findOne(oOptions ?? {});
     }
 
     public async findMany(oOptions?: FindManyOptions<T>): Promise<Array<T>> {
@@ -45,160 +29,45 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
         return await oRepository.find(oOptions ?? {});
     }
 
-    public async findById(sId: string): Promise<T | null> {
-        return await this.findOne({
-            where: {
-                id: sId,
-            } as FindOptionsWhere<T>,
-        });
-    }
-
     public async existBy(oOptions?: FindManyOptions<T>): Promise<boolean> {
         const oRepository = await this.getRepository();
 
         return await oRepository.exists(oOptions);
     }
 
-    public async existById(sId: string, _withDeleted?: boolean): Promise<boolean> {
-        return await this.existBy({
-            where: {
-                id: In(sId as unknown as FindOperator<string>),
-            } as FindOptionsWhere<T>,
-            withDeleted: _withDeleted ?? false,
-        });
-    }
-
-    public async existByOrFail(oFilters?: FindManyOptions<T>): Promise<boolean> {
-        const bResult = await this.existBy(oFilters);
-
-        if (bResult === false) {
-            throw this.throwException('values', 'NotFound', Object.values(oFilters));
-        }
-
-        return bResult;
-    }
-
     public async existByIdOrFail(sId: string, _withDeleted?: boolean): Promise<boolean> {
-        return await this.existByOrFail({
+        const bResult = await this.existBy({
             where: {
                 id: sId,
             } as FindOptionsWhere<T>,
             withDeleted: _withDeleted ?? false,
         });
+
+        if (bResult === false) {
+            throw this.throwException('values', 'NotFound', [sId]);
+        }
+
+        return bResult;
     }
 
-    protected async save(oValue: T): Promise<T> {
-        const oRepository = await this.getRepository();
+    public async saveAll(_oValue: Array<T>, sIndentifierColumn: PropertyName<T>, oOverwrite: PropertyName<T>[], fIndentifierColumnCallback: (oItem: T) => string, bSelectValues?: boolean): Promise<Array<T>> {
+        for (let i = 0; i < _oValue.length; i++) {
+            const oItem = _oValue[i];
 
-        const {id} = await oRepository.save(oValue);
+            if (typeof this['getCurrentUser'] === 'function') {
+                const oCurrentUser: UserDto = await this['getCurrentUser']();
 
-        return await this.findById(id);
-    }
+                oItem['createdById'] = oCurrentUser.id;
+                oItem['createdByUsername'] = oCurrentUser.username;
+                oItem['updatedById'] = oCurrentUser.id;
+                oItem['updatedByUsername'] = oCurrentUser.username;
+            }
 
-    protected async checkBeforeUpdate(sId: string): Promise<boolean> {
-        return await this.existByIdOrFail(sId);
-    }
-
-    protected async updateById(sId: string, oValue: QueryDeepPartialEntity<T>): Promise<T> {
-        await this.checkBeforeUpdate(sId);
-
-        const oRepository = await this.getRepository();
-
-        await oRepository.createQueryBuilder()
-            .update()
-            .set(oValue)
-            .where('id = :sId', {sId})
-            .execute();
-
-        return await this.findById(sId);
-    }
-
-    protected async checkBeforeDelete(sId: string): Promise<boolean> {
-        await this.existByIdOrFail(sId);
-
-        const oEntity = await this.findById(sId);
-
-        const oRelationsOneToMany = await this.getOneToManyProperties(this.entity());
-
-        for (let i = 0; i < oRelationsOneToMany.length; i++) {
-            const key = oRelationsOneToMany[i];
-            const nElements = (await oEntity[key]).length;
-
-            if (nElements > 0) {
-                throw this.throwException('id', key + 'InUse', [nElements]);
+            if (typeof this['onBeforeSave'] === 'function') {
+                await this['onBeforeSave'](oItem);
             }
         }
 
-        return true;
-    }
-
-    public async deleteById(sId: string): Promise<boolean> {
-        await this.checkBeforeDelete(sId);
-
-        const oRepository = await this.getRepository();
-
-        if (await this.useSoftDelete()) {
-            await oRepository.softDelete(sId);
-        } else {
-            await oRepository.delete(sId);
-        }
-
-        return true;
-    }
-
-    private async insertAll(oRepository: Repository<T>, _oValue: Array<T>, sIndentifierColumn: PropertyName<T>, overwrite: PropertyName<T>[]) {
-        const oValue = _oValue.map((oItem) => {
-            if (!oItem.id) {
-                oItem.id = uuidv4();
-            }
-
-            if (!oItem.createdAt) {
-                oItem.createdAt = new Date();
-            }
-
-            if (!oItem.updatedAt) {
-                oItem.updatedAt = new Date();
-            }
-
-            return oItem;
-        });
-
-        const sIndentifierColumnName = this.getColumnByPropertyName(this.entity(), sIndentifierColumn);
-
-        const oOverwrite = [...([...overwrite] as PropertyName<T>[]).map((sItem) => {
-            return this.getColumnByPropertyName(this.entity(), sItem);
-        }), 'updated_at', sIndentifierColumnName].filter((oItem) => typeof oItem === 'string');
-
-        await async.forEachLimit(this.chunkList(oValue, 500), 10, async (oItem: Array<T>, callback) => {
-            await oRepository.createQueryBuilder()
-                .insert()
-                .into(this.entity())
-                .values(oItem as QueryDeepPartialEntity<T>[])
-                .orUpdate(oOverwrite, [sIndentifierColumnName], {
-                    upsertType: 'on-conflict-do-update',
-                }).execute();
-
-            callback(null);
-        });
-    }
-
-    private async updateAll(oRepository: Repository<T>, _oValue: Array<T>, sIndentifierColumn: PropertyName<T>, overwrite: PropertyName<T>[]) {
-        const dbType = oRepository.manager.connection.options.type;
-
-        if (dbType === 'mysql' || dbType === 'mariadb') {
-            await async.forEachLimit(this.chunkList(_oValue, 1), 4, async (oItem: Array<T>, callback) => {
-                await oRepository.save(oItem, {
-                    chunk: 500,
-                });
-
-                callback(null);
-            });
-        } else if (dbType === 'postgres') {
-            await this.insertAll(oRepository, _oValue, sIndentifierColumn, overwrite);
-        }
-    }
-
-    public async saveAll(_oValue: Array<T>, sIndentifierColumn: PropertyName<T>, overwrite: PropertyName<T>[], fIndentifierColumnCallback: (oItem: T) => string, bSelectValues?: boolean): Promise<Array<T>> {
         const oRepository = await this.getRepository();
 
         const oFilters = {};
@@ -240,28 +109,59 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
         }
 
         if (oItemsInsert.length > 0) {
-            await this.insertAll(oRepository, oItemsInsert, sIndentifierColumn, overwrite);
+            await this.insertAll(oRepository, oItemsInsert, sIndentifierColumn, [
+                ...oOverwrite,
+                ...(typeof this['getCurrentUser'] === 'function' ? ['updatedById', 'updatedByUsername'] : [])
+            ] as PropertyName<T>[]);
         }
 
         if (oItemsUpdate.length > 0) {
-            await this.updateAll(oRepository, oItemsUpdate, sIndentifierColumn, overwrite);
+            await this.updateAll(oRepository, oItemsUpdate, sIndentifierColumn, [
+                ...oOverwrite,
+                ...(typeof this['getCurrentUser'] === 'function' ? ['updatedById', 'updatedByUsername'] : [])
+            ] as PropertyName<T>[]);
         }
 
-        if (bSelectValues !== false) {
-            return await this.findMany({
-                where: oFilters,
+        const oResult: T[] = await this.findMany({
+            where: oFilters,
+        });
+
+        for (let i = 0; i < oResult.length; i++) {
+            if (typeof this['onAfterSave'] === 'function') {
+                await this['onAfterSave'](oResult[i]);
+            }
+        }
+
+        return oResult;
+    }
+
+    public async deleteById(sId: string): Promise<boolean> {
+        if (typeof this['getCurrentUser'] === 'function') {
+            const oCurrentUser: UserDto = await this['getCurrentUser']();
+
+            await this.updateById(sId, {
+                deletedById: oCurrentUser.id,
+                deletedByUsername: oCurrentUser.username
             });
-        } else {
-            return [];
         }
-    }
 
-    protected getExcelTemplateName(): string | null {
-        throw this.throwException('file', 'serviceNoAvailable', ['getExcelTemplateName']);
-    }
+        if (typeof this['onBeforeDelete'] === 'function') {
+            await this['onBeforeDelete'](sId);
+        }
 
-    protected async getExcelTemplateColumns(): Promise<Array<IExcelColumn> | null> {
-        throw this.throwException('file', 'serviceNoAvailable', ['getExcelTemplateColumns']);
+        const oRepository = await this.getRepository();
+
+        if (await this.useSoftDelete()) {
+            await oRepository.softDelete(sId);
+        } else {
+            await oRepository.delete(sId);
+        }
+
+        if (typeof this['onAfterDelete'] === 'function') {
+            await this['onAfterDelete'](sId);
+        }
+
+        return true;
     }
 
     public async buildTemplateExcelForDownload(): Promise<IDownload> {
@@ -356,17 +256,149 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
         };
     }
 
-    protected async processTemplateExcel(oBufferFile: Buffer): Promise<ExcelJS.Row[]> {
-        const oWorkbook: ExcelJS.Workbook = new ExcelJS.Workbook();
-
-        await oWorkbook.xlsx.load(oBufferFile);
-
-        const oWorksheet: ExcelJS.Worksheet = oWorkbook.getWorksheet(this.getExcelTemplateName());
-
-        return oWorksheet.getRows(2, oWorksheet.rowCount - 1);
-    }
-
     public async uploadTemplateExcel(oBufferFile: Buffer): Promise<boolean> {
         throw this.throwException('file', 'serviceNoAvailable', ['uploadTemplateExcel']);
+    }
+
+    protected abstract getRepository(): Promise<Repository<T>>;
+
+    protected abstract useSoftDelete(): Promise<boolean>;
+
+    protected abstract entity(): ObjectType<T>;
+
+    protected abstract saveWithDto(oDto: CD): Promise<T>;
+
+    protected abstract updateByIdWithDto(sId: string, oDto: DeepPartial<UD>): Promise<T>;
+
+    protected getExcelTemplateName(): string | null {
+        throw this.throwException('file', 'serviceNoAvailable', ['getExcelTemplateName']);
+    }
+
+    protected getExcelTemplateColumns(): Promise<Array<IExcelColumn> | null> {
+        throw this.throwException('file', 'serviceNoAvailable', ['getExcelTemplateColumns']);
+    }
+
+    protected convertToPascalCase(sValue: string): string {
+        return sValue.at(0).toLowerCase() + sValue.substring(1);
+    }
+
+    protected async save(oValue: T): Promise<T> {
+        const oRepository = await this.getRepository();
+
+        if (typeof this['getCurrentUser'] === 'function') {
+            const oCurrentUser: UserDto = await this['getCurrentUser']();
+
+            oValue['createdById'] = oCurrentUser.id;
+            oValue['createdByUsername'] = oCurrentUser.username;
+            oValue['updatedById'] = oCurrentUser.id;
+            oValue['updatedByUsername'] = oCurrentUser.username;
+        }
+
+        if (typeof this['onBeforeSave'] === 'function') {
+            await this['onBeforeSave'](oValue);
+        }
+
+        const {id} = await oRepository.save(oValue);
+
+        if (typeof this['onAfterSave'] === 'function') {
+            await this['onAfterSave'](oValue);
+        }
+
+        return await this.findOne({
+            where: {
+                id: id
+            } as FindOptionsWhere<T>
+        });
+    }
+
+    protected async updateById(sId: string, oValue: QueryDeepPartialEntity<T> | Partial<AuditUserString>): Promise<T> {
+        if (typeof this['getCurrentUser'] === 'function') {
+            const oCurrentUser: UserDto = await this['getCurrentUser']();
+
+            oValue['updatedById'] = oCurrentUser.id;
+            oValue['updatedByUsername'] = oCurrentUser.username;
+        }
+
+        if (typeof this['onBeforeUpdate'] === 'function') {
+            await this['onBeforeUpdate'](oValue);
+        }
+
+        const oRepository = await this.getRepository();
+
+        await oRepository.createQueryBuilder()
+            .update()
+            .set(oValue as QueryDeepPartialEntity<T>)
+            .where('id = :sId', {sId})
+            .execute();
+
+        const oFind: T = await this.findOne({
+            where: {
+                id: sId
+            } as FindOptionsWhere<T>
+        });
+
+        if (typeof this['onAfterUpdate'] === 'function') {
+            await this['onAfterUpdate'](oFind);
+        }
+
+        return oFind;
+    }
+
+    private entityName(): string {
+        const eValue = this.entity();
+
+        return eValue.name;
+    }
+
+    private async insertAll(oRepository: Repository<T>, _oValue: Array<T>, sIndentifierColumn: PropertyName<T>, overwrite: PropertyName<T>[]) {
+        const oValue = _oValue.map((oItem) => {
+            if (!oItem.id) {
+                oItem.id = uuidv4();
+            }
+
+            if (!oItem.createdAt) {
+                oItem.createdAt = new Date();
+            }
+
+            if (!oItem.updatedAt) {
+                oItem.updatedAt = new Date();
+            }
+
+            return oItem;
+        });
+
+        const sIndentifierColumnName = this.getColumnByPropertyName(this.entity(), sIndentifierColumn);
+
+        const oOverwrite = [...([...overwrite] as PropertyName<T>[]).map((sItem) => {
+            return this.getColumnByPropertyName(this.entity(), sItem);
+        }), 'updated_at', sIndentifierColumnName].filter((oItem) => typeof oItem === 'string');
+
+        await async.forEachLimit(this.chunkList(oValue, 500), 10, async (oItem: Array<T>, callback) => {
+            await oRepository.createQueryBuilder()
+                .insert()
+                .into(this.entity())
+                .values(oItem as QueryDeepPartialEntity<T>[])
+                .orUpdate(oOverwrite, [sIndentifierColumnName], {
+                    upsertType: 'on-conflict-do-update',
+                }).execute();
+
+            callback(null);
+        });
+    }
+
+    private async updateAll(oRepository: Repository<T>, _oValue: Array<T>, sIndentifierColumn: PropertyName<T>, overwrite: PropertyName<T>[]) {
+        const dbType = oRepository.manager.connection.options.type;
+
+        if (dbType === 'mysql' || dbType === 'mariadb') {
+            await async.forEachLimit(this.chunkList(_oValue, 1), 4, async (oItem: Array<T>, callback) => {
+                await oRepository.save(oItem, {
+                    chunk: 500,
+                });
+
+                callback(null);
+            });
+        } else if (dbType === 'postgres') {
+            await this.insertAll(oRepository, _oValue, sIndentifierColumn, overwrite);
+        }
     }
 }

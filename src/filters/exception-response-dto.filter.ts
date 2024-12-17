@@ -1,4 +1,4 @@
-import {Catch, Injectable, Scope, ExceptionFilter, ArgumentsHost} from '@nestjs/common';
+import {ArgumentsHost, Catch, ExceptionFilter} from '@nestjs/common';
 import {HttpArgumentsHost} from '@nestjs/common/interfaces';
 import {isResponseDto, ResponseDto} from 'nest-clean-response';
 import {ExceptionsFilter} from './exceptions.filter';

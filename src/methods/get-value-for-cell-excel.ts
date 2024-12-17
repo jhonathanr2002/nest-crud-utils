@@ -8,7 +8,7 @@ export default function getValueForCellExcel(oValue: ExcelJS.CellValue): string 
             sTmpValue = null;
         } else if (['number', 'string', 'boolean', 'Date'].includes(typeof oValue)) {
             sTmpValue = oValue.toString();
-        } else if (typeof oValue === 'object' && oValue !== null) {
+        } else if (typeof oValue === 'object') {
             if ('error' in oValue) {
                 sTmpValue = null;
             } else if ('richText' in oValue) {

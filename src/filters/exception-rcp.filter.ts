@@ -1,11 +1,11 @@
-import {Catch, ExceptionFilter, ArgumentsHost, HttpStatus, BadRequestException} from '@nestjs/common';
+import {ArgumentsHost, BadRequestException, Catch, ExceptionFilter, HttpStatus} from '@nestjs/common';
 import {
     BackendErrorException,
-    isResponseDto,
-    getHttpCodeByError,
-    ResponseDto,
-    getHttpStatusDescription,
     Duration,
+    getHttpCodeByError,
+    getHttpStatusDescription,
+    isResponseDto,
+    ResponseDto,
     ResponseErrorDto,
     UserException,
 } from 'nest-clean-response';
@@ -45,7 +45,7 @@ export class ExceptionRcpFilter<T extends Error> implements ExceptionFilter {
             oBackendError = new BackendErrorException(getHttpCodeByError(oException), oException);
         }
 
-        if(oBackendError instanceof BackendErrorException){
+        if (oBackendError instanceof BackendErrorException) {
             return throwError(() => new ResponseDto<null>(
                 oBackendError.getStatus(),
                 getHttpStatusDescription(oBackendError.getStatus()),
