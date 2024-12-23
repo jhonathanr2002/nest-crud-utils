@@ -1,20 +1,19 @@
-import {AuditTimestamp} from "../entities/audit-timestamp.entity";
-import {UserException} from "nest-clean-response";
-import {DeepPartial, FindManyOptions, FindOneOptions, FindOptionsSelect, FindOptionsWhere, In, ObjectType, Repository} from "typeorm";
-import {UserDto} from "../dto/user.dto";
-import {QueryDeepPartialEntity} from "typeorm/query-builder/QueryPartialEntity";
-import {AuditUserString} from "../entities/audit-user-string.entity";
-import {BasicMethods} from "./basic-methods.service";
-import {PropertyName} from "../types/property-name.type";
-import {v4 as uuidv4} from "uuid";
+import { AuditTimestamp } from "../entities/audit-timestamp.entity";
+import { MessageArgsType, UserException } from "nest-clean-response";
+import { FindManyOptions, FindOneOptions, FindOptionsSelect, FindOptionsWhere, In, ObjectType, Repository } from "typeorm";
+import { UserDto } from "../dto/user.dto";
+import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
+import { BasicMethods } from "./basic-methods.service";
+import { PropertyName } from "../types/property-name.type";
+import { v4 as uuidv4 } from "uuid";
 import async from "async";
-import {IDownload} from "../interfaces/download.interface";
+import { IDownload } from "../interfaces/download.interface";
 import * as ExcelJS from "exceljs";
-import {IExcelColumn} from "../interfaces/excel-column.interface";
+import { IExcelColumn } from "../interfaces/excel-column.interface";
 
-export abstract class TypeormUserStringService<T extends AuditTimestamp, CD, UD> extends BasicMethods {
-    public throwException(sProperty: string, sMessage: string, oValues: string[]): UserException {
-        return new UserException(sProperty, `${this.convertToPascalCase(this.entityName())}${this.convertToPascalCase(sMessage)}`, oValues);
+export abstract class TypeormService<T extends AuditTimestamp, CD, UD> extends BasicMethods {
+    public throwException(sProperty: string, sMessage: string, args: MessageArgsType): UserException {
+        return new UserException(sProperty, `${this.convertToPascalCase(this.entityName())}${this.convertToPascalCase(sMessage)}`, args);
     }
 
     public async findOne(oOptions?: FindOneOptions<T>): Promise<T | null> {
@@ -45,6 +44,19 @@ export abstract class TypeormUserStringService<T extends AuditTimestamp, CD, UD>
 
         if (bResult === false) {
             throw this.throwException('values', 'NotFound', [sId]);
+        }
+
+        return bResult;
+    }
+
+    public async existByFiltersOrFail(oFilters?: FindOptionsWhere<T>, _withDeleted?: boolean): Promise<boolean> {
+        const bResult = await this.existBy({
+            where: oFilters ?? {},
+            withDeleted: _withDeleted ?? false
+        });
+
+        if (bResult === false) {
+            throw this.throwException('id', 'NotFound', [Object.values(oFilters)] as unknown as string[]);
         }
 
         return bResult;
@@ -142,7 +154,7 @@ export abstract class TypeormUserStringService<T extends AuditTimestamp, CD, UD>
             await this.updateById(sId, {
                 deletedById: oCurrentUser.id,
                 deletedByUsername: oCurrentUser.username
-            });
+            } as unknown as QueryDeepPartialEntity<T>);
         }
 
         if (typeof this['onBeforeDelete'] === 'function') {
@@ -233,7 +245,7 @@ export abstract class TypeormUserStringService<T extends AuditTimestamp, CD, UD>
             cell.fill = {
                 type: 'pattern',
                 pattern: 'solid',
-                fgColor: {argb: 'B7C5E4'},
+                fgColor: { argb: 'B7C5E4' },
             };
 
             cell.font = {
@@ -243,10 +255,10 @@ export abstract class TypeormUserStringService<T extends AuditTimestamp, CD, UD>
             };
 
             cell.border = {
-                top: {style: 'thin'},
-                left: {style: 'thin'},
-                bottom: {style: 'thin'},
-                right: {style: 'thin'},
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' },
             };
         });
 
@@ -260,15 +272,25 @@ export abstract class TypeormUserStringService<T extends AuditTimestamp, CD, UD>
         throw this.throwException('file', 'serviceNoAvailable', ['uploadTemplateExcel']);
     }
 
+    protected async processTemplateExcel(oBufferFile: Buffer, nStart?: number): Promise<ExcelJS.Row[]> {
+        const oWorkbook: ExcelJS.Workbook = new ExcelJS.Workbook();
+
+        await oWorkbook.xlsx.load(oBufferFile);
+
+        const oWorksheet: ExcelJS.Worksheet = oWorkbook.getWorksheet(this.getExcelTemplateName());
+
+        return oWorksheet.getRows(nStart ?? 2, oWorksheet.rowCount - 1);
+    }
+
     protected abstract getRepository(): Promise<Repository<T>>;
 
     protected abstract useSoftDelete(): Promise<boolean>;
 
     protected abstract entity(): ObjectType<T>;
 
-    protected abstract saveWithDto(oDto: CD): Promise<T>;
+    public abstract saveWithDto(oDto: CD): Promise<T>;
 
-    protected abstract updateByIdWithDto(sId: string, oDto: DeepPartial<UD>): Promise<T>;
+    public abstract updateByIdWithDto(sId: string, oDto: UD): Promise<T>;
 
     protected getExcelTemplateName(): string | null {
         throw this.throwException('file', 'serviceNoAvailable', ['getExcelTemplateName']);
@@ -282,7 +304,7 @@ export abstract class TypeormUserStringService<T extends AuditTimestamp, CD, UD>
         return sValue.at(0).toLowerCase() + sValue.substring(1);
     }
 
-    protected async save(oValue: T): Promise<T> {
+    public async save(oValue: T): Promise<T> {
         const oRepository = await this.getRepository();
 
         if (typeof this['getCurrentUser'] === 'function') {
@@ -298,7 +320,7 @@ export abstract class TypeormUserStringService<T extends AuditTimestamp, CD, UD>
             await this['onBeforeSave'](oValue);
         }
 
-        const {id} = await oRepository.save(oValue);
+        const { id } = await oRepository.save(oValue);
 
         if (typeof this['onAfterSave'] === 'function') {
             await this['onAfterSave'](oValue);
@@ -311,7 +333,7 @@ export abstract class TypeormUserStringService<T extends AuditTimestamp, CD, UD>
         });
     }
 
-    protected async updateById(sId: string, oValue: QueryDeepPartialEntity<T> | Partial<AuditUserString>): Promise<T> {
+    public async updateById(sId: string, oValue: QueryDeepPartialEntity<T>): Promise<T> {
         if (typeof this['getCurrentUser'] === 'function') {
             const oCurrentUser: UserDto = await this['getCurrentUser']();
 
@@ -328,7 +350,7 @@ export abstract class TypeormUserStringService<T extends AuditTimestamp, CD, UD>
         await oRepository.createQueryBuilder()
             .update()
             .set(oValue as QueryDeepPartialEntity<T>)
-            .where('id = :sId', {sId})
+            .where('id = :sId', { sId })
             .execute();
 
         const oFind: T = await this.findOne({
