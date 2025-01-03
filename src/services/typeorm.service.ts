@@ -11,9 +11,17 @@ import { IDownload } from "../interfaces/download.interface";
 import * as ExcelJS from "exceljs";
 import { IExcelColumn } from "../interfaces/excel-column.interface";
 
-export abstract class TypeormService<T extends AuditTimestamp, CD, UD> extends BasicMethods {
+export abstract class TypeormService<T extends AuditTimestamp> extends BasicMethods {
     public throwException(sProperty: string, sMessage: string, args: MessageArgsType): UserException {
         return new UserException(sProperty, `${this.convertToPascalCase(this.entityName())}${this.convertToPascalCase(sMessage)}`, args);
+    }
+
+    public async findById(sId: string): Promise<T | null> {
+        return await this.findOne({
+            where: {
+                id: sId
+            }
+        } as FindOneOptions<T>);
     }
 
     public async findOne(oOptions?: FindOneOptions<T>): Promise<T | null> {
@@ -287,10 +295,6 @@ export abstract class TypeormService<T extends AuditTimestamp, CD, UD> extends B
     protected abstract useSoftDelete(): Promise<boolean>;
 
     protected abstract entity(): ObjectType<T>;
-
-    public abstract saveWithDto(oDto: CD): Promise<T>;
-
-    public abstract updateByIdWithDto(sId: string, oDto: UD): Promise<T>;
 
     protected getExcelTemplateName(): string | null {
         throw this.throwException('file', 'serviceNoAvailable', ['getExcelTemplateName']);

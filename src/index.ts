@@ -32,6 +32,8 @@ export * from './services/interfaces/on-before-delete.interface';
 export * from './services/interfaces/on-before-save.interface';
 export * from './services/interfaces/on-before-update.interface';
 export * from './services/interfaces/on-get-current-user.interface';
+export * from './services/interfaces/on-save-dto.interface';
+export * from './services/interfaces/on-update-dto.interface';
 
 export * from './services/basic-methods.service';
 export * from './services/typeorm.service';
