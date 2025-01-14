@@ -13,7 +13,7 @@ import { IExcelColumn } from "../interfaces/excel-column.interface";
 
 export abstract class TypeormService<T extends AuditTimestamp> extends BasicMethods {
     public throwException(sProperty: string, sMessage: string, args: MessageArgsType): UserException {
-        return new UserException(sProperty, `${this.convertToPascalCase(this.entityName())}${this.convertToPascalCase(sMessage)}`, args);
+        return new UserException(sProperty, `${this.convertToCamelCase(this.entityName())}${this.convertToPascalCase(sMessage)}`, args);
     }
 
     public async findById(sId: string): Promise<T | null> {
@@ -287,7 +287,9 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
 
         const oWorksheet: ExcelJS.Worksheet = oWorkbook.getWorksheet(this.getExcelTemplateName());
 
-        return oWorksheet.getRows(nStart ?? 2, oWorksheet.rowCount - 1);
+        return oWorksheet.getRows(nStart ?? 2, oWorksheet.rowCount - 1).filter((oItem: ExcelJS.Row) => {
+            return (oItem.values as []).length > 0;
+        });
     }
 
     protected abstract getRepository(): Promise<Repository<T>>;
@@ -305,7 +307,11 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
     }
 
     protected convertToPascalCase(sValue: string): string {
-        return sValue.at(0).toLowerCase() + sValue.substring(1);
+        return sValue.at(0).toUpperCase() + sValue.substring(1);
+    }
+
+    protected convertToCamelCase(sValue: string): string {
+        return sValue.at(0).toUpperCase() + sValue.substring(1);
     }
 
     public async save(oValue: T): Promise<T> {
@@ -372,7 +378,6 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
 
     private entityName(): string {
         const eValue = this.entity();
-
         return eValue.name;
     }
 
