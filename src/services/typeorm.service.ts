@@ -172,6 +172,16 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
         const oRepository = await this.getRepository();
 
         if (await this.useSoftDelete()) {
+            const oData = await this.findById(sId);
+
+            const oProperties: string[] = await this.getOneToManyProperties(this.entity());
+
+            for (const sProperty of oProperties) {
+                if((await oData[sProperty]).length != 0){
+                    throw this.throwException(`${sProperty}`, "InUse", [sId]);
+                }
+            }
+
             await oRepository.softDelete(sId);
         } else {
             await oRepository.delete(sId);
