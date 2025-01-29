@@ -177,7 +177,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
             const oProperties: string[] = await this.getOneToManyProperties(this.entity());
 
             for (const sProperty of oProperties) {
-                if((await oData[sProperty]).length != 0){
+                if ((await oData[sProperty]).length != 0) {
                     throw this.throwException(`${sProperty}`, "InUse", [sId]);
                 }
             }
@@ -362,7 +362,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
         }
 
         if (typeof this['onBeforeUpdate'] === 'function') {
-            await this['onBeforeUpdate'](oValue);
+            await this['onBeforeUpdate'](sId, oValue);
         }
 
         const oRepository = await this.getRepository();
