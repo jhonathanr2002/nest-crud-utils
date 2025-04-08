@@ -1,50 +1,50 @@
 {
-    "name": "nest-crud-utils",
-    "version": "1.7.0",
-    "description": "",
-    "main": "dist/index.js",
-    "types": "./dist/index.d.ts",
-    "repository": "https://github.com/jhonathanr2002/nest-crud-utils",
-    "scripts": {
-        "build": "npx tsc",
-        "publish:npm": "npm run build && npm publish",
-        "update": "pnpm update"
-    },
-    "keywords": [
-        "Nest JS",
-        "validator",
-        "Swagger"
-    ],
-    "author": "jhonathanr2002",
-    "license": "MIT",
-    "dependencies": {
-        "@nestjs/common": "^11.0.13",
-        "@nestjs/microservices": "^11.0.13",
-        "@nestjs/swagger": "^11.1.1",
-        "@nestjs/throttler": "^6.4.0",
-        "async": "^3.2.6",
-        "class-transformer": "^0.5.1",
-        "class-validator": "^0.14.1",
-        "exceljs": "^4.4.0",
-        "express": "^5.1.0",
-        "multer": "1.4.5-lts.2",
-        "nest-clean-response": "^1.4.0",
-        "nest-swagger-validator": "^1.7.0",
-        "rxjs": "^7.8.2",
-        "typeorm": "^0.3.22",
-        "typescript": "^5.8.3",
-        "uuid": "^11.1.0"
-    },
-    "devDependencies": {
-        "@types/async": "^3.2.24",
-        "@types/express": "^5.0.1",
-        "@types/multer": "1.4.12",
-        "@types/node": "^22.14.0"
-    },
-    "pnpm": {
-        "onlyBuiltDependencies": [
-            "@nestjs/core",
-            "@scarf/scarf"
-        ]
-    }
+  "name": "nest-crud-utils",
+  "version": "2.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
+  "repository": "https://github.com/jhonathanr2002/nest-crud-utils",
+  "scripts": {
+    "build": "npx tsc",
+    "publish:npm": "npm run build && npm publish",
+    "update": "rm -rf node_modules package-lock.json pnpm-lock.yaml && pnpm update"
+  },
+  "keywords": [
+    "Nest JS",
+    "validator",
+    "Swagger"
+  ],
+  "author": "jhonathanr2002",
+  "license": "MIT",
+  "peerDependencies": {
+    "@nestjs/common": "^10 || ^11",
+    "@nestjs/microservices": "^10 || ^11",
+    "@nestjs/swagger": "^10 || ^11",
+    "@nestjs/throttler": "^6",
+    "async": "^3",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "exceljs": "^4",
+    "express": "^5",
+    "multer": "1.4.5-lts.2",
+    "nest-clean-response": "^1 || ^2",
+    "nest-swagger-validator": "^1 || ^2",
+    "rxjs": "^7",
+    "typeorm": "^0.3",
+    "uuid": "^11"
+  },
+  "devDependencies": {
+    "@types/async": "^3.2.24",
+    "@types/express": "^5.0.1",
+    "@types/multer": "1.4.12",
+    "@types/node": "^22.14.0",
+    "typescript": "^5.8.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@scarf/scarf"
+    ]
+  }
 }

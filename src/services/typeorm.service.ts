@@ -1,15 +1,23 @@
-import { AuditTimestamp } from "../entities/audit-timestamp.entity";
-import { MessageArgsType, UserException } from "nest-clean-response";
-import { FindManyOptions, FindOneOptions, FindOptionsSelect, FindOptionsWhere, In, ObjectType, Repository } from "typeorm";
-import { UserDto } from "../dto/user.dto";
-import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
-import { BasicMethods } from "./basic-methods.service";
-import { PropertyName } from "../types/property-name.type";
-import { v4 as uuidv4 } from "uuid";
-import async from "async";
-import { IDownload } from "../interfaces/download.interface";
+import {AuditTimestamp} from "../entities/audit-timestamp.entity";
+import {MessageArgsType, UserException} from "nest-clean-response";
+import {
+    FindManyOptions,
+    FindOneOptions,
+    FindOptionsSelect,
+    FindOptionsWhere,
+    In,
+    ObjectType,
+    Repository
+} from "typeorm";
+import {UserDto} from "../dto/user.dto";
+import {QueryDeepPartialEntity} from "typeorm/query-builder/QueryPartialEntity";
+import {BasicMethods} from "./basic-methods.service";
+import {PropertyName} from "../types/property-name.type";
+import {v4 as uuidv4} from "uuid";
+import async from 'async';
+import {IDownload} from "../interfaces/download.interface";
 import * as ExcelJS from "exceljs";
-import { IExcelColumn } from "../interfaces/excel-column.interface";
+import {IExcelColumn} from "../interfaces/excel-column.interface";
 
 export abstract class TypeormService<T extends AuditTimestamp> extends BasicMethods {
     public throwException(sProperty: string, sMessage: string, args: MessageArgsType): UserException {
@@ -70,7 +78,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
         return bResult;
     }
 
-    public async saveAll(_oValue: Array<T>, sIndentifierColumn: PropertyName<T>, oOverwrite: PropertyName<T>[], fIndentifierColumnCallback: (oItem: T) => string, bSelectValues?: boolean): Promise<Array<T>> {
+    public async upsertAll(_oValue: Array<T>, sIndentifierColumn: PropertyName<T>, oOverwrite: PropertyName<T>[], fIndentifierColumnCallback: (oItem: T) => string, bSelectValues?: boolean): Promise<Array<T>> {
         for (let i = 0; i < _oValue.length; i++) {
             const oItem = _oValue[i];
 
@@ -263,7 +271,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
             cell.fill = {
                 type: 'pattern',
                 pattern: 'solid',
-                fgColor: { argb: 'B7C5E4' },
+                fgColor: {argb: 'B7C5E4'},
             };
 
             cell.font = {
@@ -273,10 +281,10 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
             };
 
             cell.border = {
-                top: { style: 'thin' },
-                left: { style: 'thin' },
-                bottom: { style: 'thin' },
-                right: { style: 'thin' },
+                top: {style: 'thin'},
+                left: {style: 'thin'},
+                bottom: {style: 'thin'},
+                right: {style: 'thin'},
             };
         });
 
@@ -288,6 +296,91 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
 
     public async uploadTemplateExcel(oBufferFile: Buffer): Promise<boolean> {
         throw this.throwException('file', 'serviceNoAvailable', ['uploadTemplateExcel']);
+    }
+
+    public async save(oValue: T): Promise<T> {
+        const oRepository = await this.getRepository();
+
+        await this.setCurrentUserInfoSave(oValue);
+
+        if (typeof this['onBeforeSave'] === 'function') {
+            await this['onBeforeSave'](oValue);
+        }
+
+        const {id} = await oRepository.save(oValue);
+
+        if (typeof this['onAfterSave'] === 'function') {
+            await this['onAfterSave'](oValue);
+        }
+
+        return await this.findOne({
+            where: {
+                id: id
+            } as FindOptionsWhere<T>
+        });
+    }
+
+    public async saveAll(oValues: T[]): Promise<T[]> {
+        const oRepository = await this.getRepository();
+
+        const oValuesSave = await async.mapLimit<T, T>(oValues, 10, (oValue: T, callback): void => {
+            const oTask = [this.setCurrentUserInfoSave(oValue)];
+
+            if (typeof this['onBeforeSave'] === 'function') {
+                oTask.push(this['onBeforeSave'](oValue));
+            }
+
+            Promise.all(oTask)
+                .then(() => callback(null, oValue))
+                .catch(callback);
+        });
+
+        const oValuesSaveDb = await oRepository.save(oValuesSave);
+
+        if (typeof this['onAfterSave'] === 'function') {
+            await async.forEachLimit(oValuesSaveDb, 10, async (oValue: T) => {
+                await this['onAfterSave'](oValue);
+            });
+        }
+
+        return await this.findMany({
+            where: {
+                id: In(oValuesSaveDb.map((oItem) => oItem.id))
+            } as FindOptionsWhere<T>
+        });
+    }
+
+    public async updateById(sId: string, oValue: QueryDeepPartialEntity<T>): Promise<T> {
+        if (typeof this['getCurrentUser'] === 'function') {
+            const oCurrentUser: UserDto = await this['getCurrentUser']();
+
+            oValue['updatedById'] = oCurrentUser.id;
+            oValue['updatedByUsername'] = oCurrentUser.username;
+        }
+
+        if (typeof this['onBeforeUpdate'] === 'function') {
+            await this['onBeforeUpdate'](sId, oValue);
+        }
+
+        const oRepository = await this.getRepository();
+
+        await oRepository.createQueryBuilder()
+            .update()
+            .set(oValue as QueryDeepPartialEntity<T>)
+            .where('id = :sId', {sId})
+            .execute();
+
+        const oFind: T = await this.findOne({
+            where: {
+                id: sId
+            } as FindOptionsWhere<T>
+        });
+
+        if (typeof this['onAfterUpdate'] === 'function') {
+            await this['onAfterUpdate'](oFind);
+        }
+
+        return oFind;
     }
 
     protected async processTemplateExcel(oBufferFile: Buffer, nStart?: number): Promise<ExcelJS.Row[]> {
@@ -324,9 +417,7 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
         return sValue.at(0).toUpperCase() + sValue.substring(1);
     }
 
-    public async save(oValue: T): Promise<T> {
-        const oRepository = await this.getRepository();
-
+    protected async setCurrentUserInfoSave(oValue: T) {
         if (typeof this['getCurrentUser'] === 'function') {
             const oCurrentUser: UserDto = await this['getCurrentUser']();
 
@@ -335,55 +426,6 @@ export abstract class TypeormService<T extends AuditTimestamp> extends BasicMeth
             oValue['updatedById'] = oCurrentUser.id;
             oValue['updatedByUsername'] = oCurrentUser.username;
         }
-
-        if (typeof this['onBeforeSave'] === 'function') {
-            await this['onBeforeSave'](oValue);
-        }
-
-        const { id } = await oRepository.save(oValue);
-
-        if (typeof this['onAfterSave'] === 'function') {
-            await this['onAfterSave'](oValue);
-        }
-
-        return await this.findOne({
-            where: {
-                id: id
-            } as FindOptionsWhere<T>
-        });
-    }
-
-    public async updateById(sId: string, oValue: QueryDeepPartialEntity<T>): Promise<T> {
-        if (typeof this['getCurrentUser'] === 'function') {
-            const oCurrentUser: UserDto = await this['getCurrentUser']();
-
-            oValue['updatedById'] = oCurrentUser.id;
-            oValue['updatedByUsername'] = oCurrentUser.username;
-        }
-
-        if (typeof this['onBeforeUpdate'] === 'function') {
-            await this['onBeforeUpdate'](sId, oValue);
-        }
-
-        const oRepository = await this.getRepository();
-
-        await oRepository.createQueryBuilder()
-            .update()
-            .set(oValue as QueryDeepPartialEntity<T>)
-            .where('id = :sId', { sId })
-            .execute();
-
-        const oFind: T = await this.findOne({
-            where: {
-                id: sId
-            } as FindOptionsWhere<T>
-        });
-
-        if (typeof this['onAfterUpdate'] === 'function') {
-            await this['onAfterUpdate'](oFind);
-        }
-
-        return oFind;
     }
 
     private entityName(): string {
