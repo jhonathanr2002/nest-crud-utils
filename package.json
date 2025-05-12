@@ -1,6 +1,6 @@
 {
   "name": "nest-crud-utils",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "",
   "main": "dist/index.js",
   "types": "./dist/index.d.ts",
@@ -17,6 +17,9 @@
   ],
   "author": "jhonathanr2002",
   "license": "MIT",
+  "dependencies": {
+    "@nestjs/microservices": "11.1.0"
+  },
   "peerDependencies": {
     "@nestjs/common": "^10 || ^11",
     "@nestjs/microservices": "^10 || ^11",
