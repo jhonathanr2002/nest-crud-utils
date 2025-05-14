@@ -10,18 +10,21 @@ export class AuditTimestamp {
         name: 'created_at',
         update: false,
         nullable: false,
+        type: "timestamp"
     })
     createdAt: Date;
 
     @UpdateDateColumn({
         name: 'updated_at',
         nullable: false,
+        type: "timestamp"
     })
     updatedAt: Date;
 
     @DeleteDateColumn({
         name: 'deleted_at',
         nullable: true,
+        type: "timestamp"
     })
     deletedAt: Date | null;
 }
