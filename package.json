@@ -1,6 +1,6 @@
 {
   "name": "nest-crud-utils",
-  "version": "2.0.2",
+  "version": "2.0.4",
   "description": "",
   "main": "dist/index.js",
   "types": "./dist/index.d.ts",
@@ -8,7 +8,7 @@
   "scripts": {
     "build": "npx tsc",
     "publish:npm": "npm run build && npm publish",
-    "update": "rm -rf node_modules package-lock.json pnpm-lock.yaml && pnpm update"
+    "update": "rm -rf node_modules package-lock.json pnpm-lock.yaml && ncu -u && pnpm update"
   },
   "keywords": [
     "Nest JS",
@@ -18,7 +18,7 @@
   "author": "jhonathanr2002",
   "license": "MIT",
   "dependencies": {
-    "@nestjs/microservices": "11.1.0"
+    "@nestjs/microservices": "11.1.1"
   },
   "peerDependencies": {
     "@nestjs/common": "^10 || ^11",
@@ -39,9 +39,9 @@
   },
   "devDependencies": {
     "@types/async": "^3.2.24",
-    "@types/express": "^5.0.1",
+    "@types/express": "^5.0.2",
     "@types/multer": "1.4.12",
-    "@types/node": "^22.15.17",
+    "@types/node": "^22.15.20",
     "typescript": "^5.8.3"
   },
   "pnpm": {

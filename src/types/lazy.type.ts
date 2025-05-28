@@ -1,1 +1,3 @@
-export type LazyType<T> = Promise<T> | Partial<T>;
+import {Relation} from "typeorm";
+
+export type LazyType<T> = Promise<Relation<T>> | Partial<Relation<T>>;
